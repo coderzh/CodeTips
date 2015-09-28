@@ -1,6 +1,12 @@
 /*
+GoTips.go:
+  Golang速学速查速用代码手册
+
+Source: github.com/coderzh/CodeTips/blob/master/GoTips.go
+
+Author: coderzh(github.com/coderzh)
+Blog: http://blog.coderzh.com
 参考：《Go语言编程》
-Author: coderzh(http://blog.coderzh.com)
 */
 
 package main
