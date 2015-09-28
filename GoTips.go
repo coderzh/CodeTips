@@ -1,19 +1,31 @@
-// Learning GoLang
+/*
+参考：《Go语言编程》
+Author: coderzh(http://blog.coderzh.com)
+*/
+
 package main
 
 import (
 	"fmt"
 	"log"
 	"os"
+	"sync"
 	// "errors"
 	"math"
+	"testing"
 )
 
 // 0. 注释
 /*
-块注释
+规范：
+ 1. 命名：骆驼命名法（不要用下划线）
+
+命令:
+ go get github.com/coderzh/xxx
+ go build calc
+ go run xxx.go
+ go install calc
 */
-// 行注释
 
 // 1. Hello World
 func helloWorld() {
@@ -28,6 +40,7 @@ func typeDemo() {
 		v2 int
 		v3 string
 	)
+	//var p *int // 指针类型
 
 	// 变量初始化
 	var v4 int = 10
@@ -266,7 +279,7 @@ func copyFile(path string) {
 	}()
 }
 
-// 结构体
+// 5. 结构体
 type Rect struct {
 	// 小写为private
 	x, y float64
@@ -280,6 +293,7 @@ func (r *Rect) Area() float64 {
 }
 
 func netRect(x, y, width, height float64) *Rect {
+	// 实例化结构体
 	// rect1 := new(Rect)
 	// rect2 := &Rect{}
 	// rect3 := &Rect{Width:100, Height:200}
@@ -338,6 +352,99 @@ func interfaceDemo() {
 	// 类型查询
 	switch v := file.(type) {
 	}
+}
+
+// 6. 并发编程
+func counting(ch chan int) {
+	ch <- 1
+	fmt.Println("counting")
+}
+
+func channelDemo() {
+	chs := make([]chan int, 10)
+	for i := 0; i < len(chs); i++ {
+		chs[i] = make(chan int)
+		// 带缓冲区大小
+		// c: = make(chan int, 1024)
+		// for i:= range c {
+		// }
+		go counting(chs[i])
+	}
+
+	for _, ch := range chs {
+		<-ch
+		// channel select
+		/*
+			select {
+			case <-ch:
+				// ...
+			case ch <- 1:
+			}
+		*/
+	}
+
+	// 单向Channel
+	var ch1 chan<- int // 只能写入int
+	var ch2 <-chan int // 只能读出int
+
+	// 关闭Channel
+	close(ch1)
+	_, ok := <-ch2
+	if !ok {
+		// already closed
+	}
+}
+
+// 锁
+var m sync.Mutex
+
+func lockDemo() {
+	m.Lock()
+	// do something
+	defer m.Unlock()
+}
+
+// 全局唯一操作
+var once sync.Once
+
+// once.Do(someFunction)
+
+// 7. 网络编程
+// import "net"
+// net.Dial("tcp", "127.0.0.1:8080")
+
+// 8. json处理
+// import "encoding/json"
+// json.Marshal(obj) 序列化
+// json.Unmarshal() 反序列化
+
+// 9. Web开发
+// import "net/http"
+// 模板
+// import "html/template"
+
+// 10. 常用库
+// import "os"
+// import "io"
+// import "flag"
+// import "strconv"
+// import "crypto/sha1"
+// import "crypto/md5"
+
+// 11. 单元测试
+// _test结尾的go文件： xxx_test.go
+func testDemo(t *testing.T) {
+	r := sum2(2, 3)
+	if r != 5 {
+		t.Errorf("sum2(2, 3) failed. Got %d, expect 5.", r)
+	}
+}
+
+// 12. 性能测试
+func benchmarkAdd(b *testing.B) {
+	b.StopTimer()
+	// dosometing
+	b.StartTimer()
 }
 
 func main() {
