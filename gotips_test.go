@@ -12,13 +12,20 @@ Blog: http://blog.coderzh.com
 package main
 
 import (
+	"errors"
 	"fmt"
+	"github.com/stretchr/testify/assert"
+	"io"
+	"io/ioutil"
 	"log"
-	"os"
-	"sync"
-	// "errors"
 	"math"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"sync"
 	"testing"
+	"time"
 )
 
 // 0. 注释
@@ -40,7 +47,7 @@ func helloWorld() {
 
 // 2.变量类型
 func typeDemo() {
-	// 变量申明
+	// 变量声明
 	var v1 int
 	var (
 		v2 int
@@ -112,8 +119,13 @@ func typeDemo() {
 	n := len(s1)
 	// 取字符
 	c1 := s1[0]
+	// 反引号，不转义，常用于正则表达式
+	s1 = `\w+`
 
 	fmt.Println(c1)
+
+	fmt.Println(strings.HasPrefix("prefix", "pre")) // true
+	fmt.Println(strings.HasSuffix("suffix", "fix")) // true
 
 	// 字节遍历
 	for i := 0; i < n; i++ {
@@ -131,17 +143,23 @@ func typeDemo() {
 	// 初始化
 	arr1 = [32]int{0}
 	array := [5]int{1, 2, 3, 4, 5}
+	// 临时结构体数组
+	structArray := []struct {
+		name string
+		age  int
+	}{{"Tim", 18}, {"Jim", 20}}
+
 	// 数组遍历
 	for i := 0; i < len(array); i++ {
 		fmt.Println(array[i])
 	}
-	for i, v := range arr1 {
+	for i, v := range structArray {
 		fmt.Println(i, v)
 	}
 	// 数组是值类型，每次参数传递都是一份拷贝
 
 	// 数组切片Slice
-	var mySlice []int = array[:2]
+	var mySlice []int = arr1[:2]
 	mySlice1 := make([]int, 5)
 	mySlice2 := make([]int, 5, 10)
 
@@ -251,11 +269,11 @@ func myPrintf(args ...interface{}) {
 	for _, arg := range args {
 		switch arg.(type) {
 		case int:
-			fmt.Println(arg, " is int")
+			fmt.Println(arg, "is int")
 		case string:
-			fmt.Println(arg, " is string")
+			fmt.Println(arg, "is string")
 		default:
-			fmt.Println(arg, " is unknown")
+			fmt.Println(arg, "is unknown")
 		}
 	}
 }
@@ -270,7 +288,7 @@ func anonymousFunc() {
 }
 
 // defer
-func copyFile(path string) {
+func deferDemo(path string) {
 	f, err := os.Open(path)
 	if err != nil {
 		return
@@ -280,7 +298,7 @@ func copyFile(path string) {
 	// or
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Println("Runtime error caught: %v", r)
+			fmt.Printf("Runtime error caught: %v", r)
 		}
 	}()
 }
@@ -439,11 +457,14 @@ var once sync.Once
 
 // 11. 单元测试
 // _test结尾的go文件： xxx_test.go
-func testDemo(t *testing.T) {
+// 函数名以Test开头
+func TestDemo(t *testing.T) {
 	r := sum2(2, 3)
 	if r != 5 {
 		t.Errorf("sum2(2, 3) failed. Got %d, expect 5.", r)
 	}
+
+	assert.Equal(t, 1, 1)
 }
 
 // 12. 性能测试
@@ -451,6 +472,155 @@ func benchmarkAdd(b *testing.B) {
 	b.StopTimer()
 	// dosometing
 	b.StartTimer()
+}
+
+/*
+ 其他常用的代码片段
+*/
+
+// 1. 遍历文件 filepath.Walk
+// import "path/filepath"
+func doHashWalk(dirPath string) error {
+
+	fullPath, err := filepath.Abs(dirPath)
+
+	if err != nil {
+		return err
+	}
+
+	callback := func(path string, fi os.FileInfo, err error) error {
+		return hashFile(fullPath, path, fi, err)
+	}
+
+	return filepath.Walk(fullPath, callback)
+}
+
+func hashFile(root string, path string, fi os.FileInfo, err error) error {
+	if fi.IsDir() {
+		return nil
+	}
+	rel, err := filepath.Rel(root, path)
+	if err != nil {
+		return err
+	}
+	log.Println("hash rel:", rel, "abs:", path)
+	return nil
+}
+
+// 2. 读取文件
+// import "io/ioutil"
+func readFileDemo(filename string) {
+	content, err := ioutil.ReadFile(filename)
+	if err != nil {
+		//Do something
+	}
+	lines := strings.Split(string(content), "\n")
+	fmt.Println("line count:", len(lines))
+}
+
+// 判断目录或文件是否存在
+func existsPathCheck(path string) (bool, error) {
+	// 判断不存在
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		// 不存在
+	}
+
+	// 判断是否存在
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return true, err
+}
+
+// 文件目录操作
+func fileDirDemo() {
+	// 级联创建目录
+	os.MkdirAll("/path/to/create", 0777)
+}
+
+// 拷贝文件
+func copyFile(source string, dest string) (err error) {
+	sf, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+	defer sf.Close()
+	df, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer df.Close()
+	_, err = io.Copy(df, sf)
+	if err == nil {
+		si, err := os.Stat(source)
+		if err != nil {
+			err = os.Chmod(dest, si.Mode())
+		}
+
+	}
+	return
+}
+
+// 拷贝目录
+func copyDir(source string, dest string) (err error) {
+	fi, err := os.Stat(source)
+	if err != nil {
+		return err
+	}
+	if !fi.IsDir() {
+		return errors.New(source + " is not a directory")
+	}
+	err = os.MkdirAll(dest, fi.Mode())
+	if err != nil {
+		return err
+	}
+	entries, err := ioutil.ReadDir(source)
+	for _, entry := range entries {
+		sfp := filepath.Join(source, entry.Name())
+		dfp := filepath.Join(dest, entry.Name())
+		if entry.IsDir() {
+			err = copyDir(sfp, dfp)
+			if err != nil {
+				fmt.Println(err)
+			}
+		} else {
+			err = copyFile(sfp, dfp)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+
+	}
+	return nil
+}
+
+// 3. 时间处理
+// import "time"
+func TestTimeDemo(t *testing.T) {
+	// Parse
+	postDate, err := time.Parse("2006-01-02 15:04:05", "2015-09-30 19:19:00")
+	fmt.Println(postDate, err)
+
+	// Format
+	assert.Equal(t, "2015/Sep/30 07:19:00", postDate.Format("2006/Jan/02 03:04:05"))
+	assert.Equal(t, "2015-09-30T19:19:00Z", postDate.Format(time.RFC3339))
+}
+
+// 4. 正则表达式
+// import "regexp"
+func TestRegexp(t *testing.T) {
+	// 查找匹配
+	re := regexp.MustCompile(`(\d+)-(\d+)`)
+	r := re.FindAllStringSubmatch("123-666", -1)
+
+	assert.Equal(t, 1, len(r))
+	assert.Equal(t, "123", r[0][1])
+	assert.Equal(t, "666", r[0][2])
+
 }
 
 func main() {
