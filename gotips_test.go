@@ -132,7 +132,7 @@ func typeDemo() {
 		ch := s1[i]
 		fmt.Println(ch)
 	}
-	// Unicode字符遍历
+	// Unicode字符Rune遍历
 	for i, ch := range s1 {
 		fmt.Println(i, ch)
 	}
@@ -621,6 +621,12 @@ func TestRegexp(t *testing.T) {
 	assert.Equal(t, "123", r[0][1])
 	assert.Equal(t, "666", r[0][2])
 
+	cjkRe := regexp.MustCompile(`\p{Han}|\p{Hangul}|\p{Hiragana}|\p{Katakana}`)
+
+	assert.True(t, cjkRe.MatchString("中文"))
+	assert.True(t, cjkRe.MatchString("도형이"))
+	assert.True(t, cjkRe.MatchString("カテゴリー"))
+	assert.False(t, cjkRe.MatchString("abc"))
 }
 
 func main() {
