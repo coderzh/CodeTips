@@ -17,10 +17,11 @@ CodeTips的特点是使用一个代码文件将该语言大多数常用的用法
 # Languages List
 
  * Go : [gotips_test.go](https://github.com/coderzh/CodeTips/blob/master/gotips_test.go)
+ * Python [python_tips.py](https://github.com/coderzh/CodeTips/blob/master/python_tips.py)
  
 # Pull Request
 
-目前我只提供了Go语言的gotips_test.go，因为她对我来说很有用。如果你也觉得很有用，和我一起来改进她，大胆的把Pull Request丢过来吧。
+如果你也觉得很有用，和我一起来改进她，大胆的把Pull Request丢过来吧。
  
 如果你对其他语言也感兴趣，并且自己总结了一套该语言的CodeTips，也勇敢的Pull Request吧。
  
