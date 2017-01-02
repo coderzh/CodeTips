@@ -63,6 +63,7 @@ if __name__ == '__main__':
     # 选项
     parser.add_argument('-v', dest='version', default=None, help='version')
     parser.add_argument('-u', dest='uin', default=None, help='uin')
+    parser.add_argument('--verbose', dest='verbose', action='store_true', help='show verbose')
 
     args = parser.parse_args()
     #print(args.wan, args.lan, args.version, args.uin)
